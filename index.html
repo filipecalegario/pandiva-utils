@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversor Pandivá — Acordes para Mapeamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: #f9f9fb;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      padding: 2em;
+    }
+    h1 {
+      font-size: 1.6em;
+      text-align: center;
+      margin-bottom: 0.5em;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      font-size: 1em;
+      padding: 0.6em;
+      margin-top: 0.2em;
+      margin-bottom: 1em;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      resize: vertical;
+    }
+    button {
+      background: #3066d3;
+      color: #fff;
+      border: none;
+      padding: 0.7em 2em;
+      font-size: 1.08em;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 1em;
+    }
+    button:hover {
+      background: #1848a0;
+    }
+    .resultado {
+      background: #f3f6fa;
+      border-radius: 7px;
+      font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', monospace;
+      font-size: 1em;
+      padding: 1em;
+      margin-top: 1em;
+      white-space: pre;
+      word-break: break-all;
+      border: 1px solid #dde;
+    }
+    .footer {
+      text-align: center;
+      margin: 2em auto 0;
+      color: #666;
+      font-size: 0.98em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Conversor de Acordes Pandivá</h1>
+    <label for="acordesInput"><b>Digite os acordes (separados por vírgula):</b></label>
+    <input id="acordesInput" type="text" placeholder="Exemplo: F, A, Dm, Bb, C, C7, A7, F7" value="F, A, Dm, Bb, C, C7, A7, F7" autocomplete="off">
+    <button onclick="converter()">Converter</button>
+    <div id="resultado" class="resultado" style="display: none;"></div>
+  </div>
+  <div class="footer">
+    <span>Feito para o Pandivá • <a href="https://github.com/" target="_blank" rel="noopener">GitHub Pages Ready</a></span>
+  </div>
+  <script>
+    // Notas de saída para cada acorde
+    const acordesNotas = {
+      "F":   [41, 53, 57, 60],
+      "A":   [45, 57, 61, 64],
+      "Dm":  [50, 62, 65, 69],
+      "Bb":  [46, 58, 62, 65],
+      "C":   [48, 60, 64, 67],
+      "C7":  [48, 60, 64, 70],
+      "A7":  [45, 57, 61, 68],
+      "F7":  [41, 53, 57, 68],
+      // Adicione outros acordes se necessário!
+    };
+
+    // Notas de controle do Pandivá
+    const pandiva_map = [
+      [37, 38, 39, 36], // P0
+      [41, 42, 43, 40], // P1
+      [45, 46, 47, 44], // P2
+      [49, 50, 51, 48], // P3
+      [53, 54, 55, 52], // P4
+      [57, 58, 59, 56], // P5
+      [61, 62, 63, 60], // P6
+      [65, 66, 67, 64], // P7
+      [69, 70, 71, 68], // P8
+      [73, 74, 75, 72], // P9
+      [77, 78, 79, 76], // P10
+      [81, 82, 83, 80], // P11
+      [85, 86, 87, 84], // P12
+      [89, 90, 91, 88], // P13
+      [93, 94, 95, 92], // P14
+      [97, 98, 99, 96], // P15
+    ];
+
+    function converter() {
+      const input = document.getElementById('acordesInput').value;
+      const acordes = input.split(',').map(x => x.trim()).filter(x => x);
+      let linhas = [];
+      linhas.push("{");
+      for (let i = 0; i < acordes.length; i++) {
+        const acorde = acordes[i];
+        const notasControle = pandiva_map[i];
+        const notasSaida = acordesNotas[acorde];
+        if (!notasControle || !notasSaida) {
+          linhas.push(`  // P${i} -> ${acorde} [Acorde não mapeado!]`);
+          continue;
+        }
+        let linha = `  ${notasControle[0]}: ${notasSaida[0]}, ${notasControle[1]}: ${notasSaida[1]}, ${notasControle[2]}: ${notasSaida[2]}, ${notasControle[3]}: ${notasSaida[3]}, // P${i} -> ${acorde}`;
+        linhas.push(linha);
+      }
+      linhas.push("}");
+      const resultado = linhas.join('\n');
+      document.getElementById('resultado').style.display = 'block';
+      document.getElementById('resultado').textContent = resultado;
+    }
+  </script>
+</body>
+</html>
