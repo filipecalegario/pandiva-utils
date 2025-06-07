@@ -65,6 +65,11 @@
       color: #666;
       font-size: 0.98em;
     }
+    .next-btn-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 2em;
+    }
   </style>
 </head>
 <body>
@@ -74,6 +79,9 @@
     <input id="acordesInput" type="text" placeholder="Exemplo: F, A, Dm, Bb, C, C7, A7, F7" value="F, A, Dm, Bb, C, C7, A7, F7" autocomplete="off">
     <button onclick="converter()">Converter</button>
     <div id="resultado" class="resultado" style="display: none;"></div>
+  </div>
+  <div class="next-btn-container">
+    <button onclick="window.location.href='proxima.html'">Próxima Página</button>
   </div>
   <div class="footer">
     <span>Feito para o Pandivá • <a href="https://github.com/" target="_blank" rel="noopener">GitHub Pages Ready</a></span>
