@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Pandivá - Converter Cifra e Mapeamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: #f8f9fa;
+      color: #222;
+    }
+    .container {
+      max-width: 820px;
+      margin: 36px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      padding: 2.2em 2em 2em 2em;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5em;
+      margin-bottom: 0.8em;
+    }
+    textarea {
+      width: 100%;
+      font-size: 1em;
+      padding: 0.8em;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      min-height: 120px;
+      margin-bottom: 1.5em;
+      resize: vertical;
+    }
+    .result-block {
+      margin-bottom: 1.6em;
+    }
+    .label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.25em;
+      font-size: 1em;
+    }
+    .output {
+      background: #f3f6fa;
+      border-radius: 7px;
+      font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', monospace;
+      font-size: 1em;
+      padding: 1em;
+      white-space: pre-wrap;
+      border: 1px solid #dde;
+      min-height: 1.5em;
+      margin-top: 0.1em;
+      margin-bottom: 0.7em;
+    }
+    .footer {
+      text-align: center;
+      margin: 2em auto 0;
+      color: #666;
+      font-size: 0.98em;
+    }
+    .btn-voltar {
+      display: block;
+      margin: 0 auto 1.8em auto;
+      background: #3066d3;
+      color: #fff;
+      border: none;
+      padding: 0.7em 2em;
+      font-size: 1.08em;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+      text-decoration: none;
+      width: max-content;
+    }
+    .btn-voltar:hover {
+      background: #1848a0;
+    }
+    .acordes-unicos {
+      margin-bottom: 1.4em;
+      font-size: 1.05em;
+      color: #164e8a;
+    }
+    .alerta {
+      color: #a42828;
+      font-size: 0.98em;
+      margin-top: 0.4em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pandivá — Converter Cifra e Gerar Mapeamento</h1>
+    <label for="cifraOriginal" class="label">Cole sua cifra original (com acordes):</label>
+    <textarea id="cifraOriginal" placeholder="Exemplo:&#10;F        A        Dm&#10;Lembro com muita saudade ..."></textarea>
+    <div class="acordes-unicos" id="acordesUnicos"></div>
+    <div class="result-block">
+      <span class="label">Output 1: Mapeamento Pandivá</span>
+      <div id="output1" class="output"></div>
+    </div>
+    <div class="result-block">
+      <span class="label">Output 2: Cifra Pandivá (com P0, P1...)</span>
+      <div id="output2" class="output"></div>
+    </div>
+    <a class="btn-voltar" href="index.html">Voltar à Página Anterior</a>
+  </div>
+  <div class="footer">
+    Feito para o Pandivá • <a href="https://github.com/" target="_blank" rel="noopener">GitHub Pages Ready</a>
+  </div>
+  <script>
+    // Notas de saída para cada acorde
+    const acordesNotas = {
+      "F":   [41, 53, 57, 60],
+      "A":   [45, 57, 61, 64],
+      "Dm":  [50, 62, 65, 69],
+      "Bb":  [46, 58, 62, 65],
+      "C":   [48, 60, 64, 67],
+      "C7":  [48, 60, 64, 70],
+      "A7":  [45, 57, 61, 68],
+      "F7":  [41, 53, 57, 68],
+      // Adicione mais acordes aqui conforme necessário
+    };
+
+    // Notas de controle do Pandivá
+    const pandiva_map = [
+      [37, 38, 39, 36], // P0
+      [41, 42, 43, 40], // P1
+      [45, 46, 47, 44], // P2
+      [49, 50, 51, 48], // P3
+      [53, 54, 55, 52], // P4
+      [57, 58, 59, 56], // P5
+      [61, 62, 63, 60], // P6
+      [65, 66, 67, 64], // P7
+      [69, 70, 71, 68], // P8
+      [73, 74, 75, 72], // P9
+      [77, 78, 79, 76], // P10
+      [81, 82, 83, 80], // P11
+      [85, 86, 87, 84], // P12
+      [89, 90, 91, 88], // P13
+      [93, 94, 95, 92], // P14
+      [97, 98, 99, 96], // P15
+    ];
+
+    function extrairAcordesUnicos(texto) {
+      // Regex para pegar acordes: letras e dígitos, sustenidos, bemóis e extensões comuns
+      const acordeRegex = /([A-G][b#]?(m|7|maj7|sus4|sus2|dim|aug|add\d*)?)/g;
+      const linhas = texto.split('\n');
+      const encontrados = [];
+      for (let linha of linhas) {
+        let matches = Array.from(linha.matchAll(acordeRegex)).map(m => m[1]);
+        // Apenas acordes alinhados (normalmente no começo ou sozinhos na linha)
+        if (
+          matches.length &&
+          (
+            linha.trim() === matches.join(' ') || // linha só de acordes
+            linha.trim().startsWith(matches[0])   // acordes na frente
+          )
+        ) {
+          for (let m of matches) {
+            if (!encontrados.includes(m)) encontrados.push(m);
+          }
+        }
+      }
+      return encontrados;
+    }
+
+    function gerarMapeamento(acordesUnicos) {
+      let linhas = [];
+      linhas.push("{");
+      for (let i = 0; i < acordesUnicos.length; i++) {
+        const acorde = acordesUnicos[i];
+        const notasControle = pandiva_map[i];
+        const notasSaida = acordesNotas[acorde];
+        if (!notasControle || !notasSaida) {
+          linhas.push(`  // P${i} -> ${acorde} [Acorde não mapeado!]`);
+          continue;
+        }
+        let linha = `  ${notasControle[0]}: ${notasSaida[0]}, ${notasControle[1]}: ${notasSaida[1]}, ${notasControle[2]}: ${notasSaida[2]}, ${notasControle[3]}: ${notasSaida[3]}, // P${i} -> ${acorde}`;
+        linhas.push(linha);
+      }
+      linhas.push("}");
+      return linhas.join('\n');
+    }
+
+    function atualizarCifraParaPandiva(texto, acordesUnicos) {
+      // Mapeia os acordes únicos para Px
+      const mapa = {};
+      for (let i = 0; i < acordesUnicos.length; i++) {
+        mapa[acordesUnicos[i]] = 'P' + i;
+      }
+      // Substitui só acordes completos, não parte de palavras
+      let cifraConvertida = texto.replace(/([A-G][b#]?(m|7|maj7|sus4|sus2|dim|aug|add\d*)?)/g, match => {
+        return mapa[match] !== undefined ? mapa[match] : match;
+      });
+      return cifraConvertida;
+    }
+
+    function atualizarTudo() {
+      const texto = document.getElementById('cifraOriginal').value;
+      const acordesUnicos = extrairAcordesUnicos(texto);
+
+      // Mostra acordes únicos detectados
+      document.getElementById('acordesUnicos').innerHTML =
+        "<b>Acordes únicos detectados:</b> " + (
+          acordesUnicos.length ?
+          acordesUnicos.map((a, i) => `<span style="color:#3066d3">${a}</span> → <b>P${i}</b>`).join(', ')
+          : "<span style='color:#a42828'>Nenhum acorde detectado</span>"
+        );
+
+      // Gera mapeamento (output1)
+      document.getElementById('output1').textContent = gerarMapeamento(acordesUnicos);
+
+      // Gera cifra Pandivá (output2)
+      document.getElementById('output2').textContent = atualizarCifraParaPandiva(texto, acordesUnicos);
+    }
+
+    document.getElementById('cifraOriginal').addEventListener('input', atualizarTudo);
+
+    // Para demo, já coloca um exemplo inicial ao abrir
+    document.getElementById('cifraOriginal').value =
+`F                     A               Dm                
+Lembro com muita saudade daquele bailinho, quando a 
+      F                Bb
+gente dançava bem agarradinho
+                 C                 F    C7 C Bb A G
+Onde a gente ia mesmo é prá se abraçar
+F                 A7                 Dm
+Você com laquê no cabelo e um vestido rodado
+           F7                 Bb                   C7     
+E aquelas anáguas com tantos babados, e voce se sentava só
+             F   F7
+ prá me mostrar
+
+  Bb                    A                        Dm
+ E tudo o que a gente transava eram três, quatro cubas
+           Bb             F                 C7
+Eu era a raposa e voce as uvas, eu sempre querendo
+               F  F7     Bb                   A
+Teu beijo roubar, e por mais que voce se esquivasse
+             Dm               Bb                  F
+Eu tinha certeza que no fim do baile, na minha lambreta
+               C7            F     C7
+Aquele broto bonito ia me abraçar
+F                   A7            Dm                F7  
+Quando a orquestra tocava "Besame mucho", eu lhe 
+                 Bb
+apertava e olhava o seu busto
+            C7             F   C7   F                  
+Dentro do corpete querendo pular.   Eu todo cheiroso à 
+   A7                    Dm
+"lancaster" e voce à "chanel"
+         F7                 Bb                C7         
+Eu era um menino, mas fazia o papel do homem terrível só 
+         F    F7
+prá lhe guardar
+
+ Bb                    A                        Dm
+ E tudo o que a gente transava eram três, quatro cubas
+           Bb             F                 C7
+Eu era a raposa e voce era as uvas, eu sempre querendo
+               F  F7     Bb                   A
+Teu beijo roubar, e por mais que voce se esquivasse
+             Dm               Bb                  F
+Eu tinha certeza que no fim do baile, na minha lambreta
+
+          C7                     F  Fm   C7
+Contente prá casa eu ia te levar
+
+F           Am                           Dm
+E ao chegar em tua casa, em frente ao portão
+              F7                    Bb                 
+Um beijo, um abraço, minha mão, tua mão, com medo que o 
+C7                F     C7
+velho pudesse acordar
+F             A7                 Dm                     
+A pílula já existia, mas nem se falava, pois dos muitos 
+   F7                    Bb
+conselhos que tua mãe te dava
+              C7                           F    F7
+Tinha um que dizia: "só pode depois que casar"
+
+ Bb                    A                        Dm
+ E tudo o que a gente transava eram três, quatro cubas
+           Bb             F                 C7
+Eu era a raposa e voce as uvas, eu sempre querendo
+               F  F7     Bb                   A
+Teu beijo roubar, e por mais que voce se esquivasse
+             Dm               Bb                  F
+Eu tinha certeza que no fim do baile, na minha lambreta
+        C7                    F Fm  A A# B C
+Aquele corpo bonito ia me abraçar`;
+
+    atualizarTudo();
+  </script>
+</body>
+</html>
